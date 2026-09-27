@@ -45,10 +45,21 @@ done
 
 # ---- Pre-flight --------------------------------------------------------------
 bold "[1/3] Pre-flight"
-if ! xcrun devicectl list devices 2>/dev/null | grep -q "$DEVICECTL_ID"; then
+# Xcode 27's `list devices` table shows the UDID, not the CoreDevice identifier — check the JSON.
+PAIRING="$(xcrun devicectl list devices --json-output /tmp/nadi-devices.json >/dev/null 2>&1 \
+  && python3 -c "import json,sys
+for d in json.load(open('/tmp/nadi-devices.json'))['result']['devices']:
+    if d.get('identifier')=='$DEVICECTL_ID' or d.get('hardwareProperties',{}).get('udid')=='$DEVICE_UDID':
+        print(d.get('connectionProperties',{}).get('pairingState','unknown')); sys.exit(0)
+print('absent')")"
+if [[ "$PAIRING" == "absent" || -z "$PAIRING" ]]; then
   red "Device $DEVICECTL_ID not paired/visible."
-  red "Connect the iPhone, unlock it, and re-run."
+  red "Connect the iPhone with a data cable, unlock it, and re-run."
   exit 1
+fi
+if [[ "$PAIRING" != "paired" ]]; then
+  dim "  pairing state: $PAIRING — pairing now (accept 'Trust This Computer?' on the phone)"
+  xcrun devicectl manage pair --device "$DEVICECTL_ID" >/dev/null
 fi
 dim "  device paired ✓"
 
@@ -84,7 +95,7 @@ if [[ "$LAUNCH" -eq 1 ]]; then
     --device "$DEVICECTL_ID" \
     "$BUNDLE_ID" || {
       red "Launch failed."
-      red "If this is the first install with a new cert, open Settings → General → VPN & Device Management on the iPhone and trust the Apple Development cert, then tap the app icon."
+      red "If this is the first install with a new cert, open Settings → General → VPN & Device Management on the iPhone and trust the Apple Development cert, then tap the app icon. (Developer Mode must be on: Settings → Privacy & Security.)"
       exit 1
     }
 fi
