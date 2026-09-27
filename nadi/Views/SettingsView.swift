@@ -228,6 +228,7 @@ struct SettingsView: View {
     private func clearAllData() {
         do {
             try modelContext.delete(model: MeditationSession.self)
+            try modelContext.delete(model: InProgressSession.self)
             try modelContext.save()
         } catch {
             alertTitle = "Clear Failed"

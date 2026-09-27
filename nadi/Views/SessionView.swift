@@ -130,9 +130,17 @@ struct SessionView: View {
                 .animation(.easeInOut(duration: 0.5), value: breathPhase)
 
         case .transition:
-            Text("Silent meditation")
-                .font(.system(size: 20, weight: .light))
-                .foregroundStyle(NadiColor.textSecondary)
+            // Louv's dharana: attention held gently on the point between the eyebrows; bring it back when it wanders.
+            VStack(spacing: 10) {
+                Text("Silent meditation")
+                    .font(.system(size: 20, weight: .light))
+                    .foregroundStyle(NadiColor.textSecondary)
+                Text("Attention on the point between the eyebrows")
+                    .font(.system(size: 15, weight: .light))
+                    .foregroundStyle(NadiColor.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
 
         case .focus(let elapsed, let total):
             // Near-black, tap to peek at time

@@ -165,7 +165,7 @@ final class SessionState {
 
             do {
                 try audioEngine?.startEngine()
-                scheduler?.restart(elapsedSeconds: sessionElapsed())
+                scheduler?.restart(elapsedSeconds: timelineElapsed())
             } catch {
                 Logger.session.error("Resume failed: \(error)")
             }
@@ -237,6 +237,14 @@ final class SessionState {
             isPaused: isPaused,
             pauseStartTime: pauseStartTime
         )
+    }
+
+    /// Elapsed time on the audio timeline, whose t=0 is the end of the countdown (see TickEvent).
+    /// `sessionElapsed()` includes the countdown; handing that to `TickScheduler.restart` made every
+    /// tick and the bell land `countdownSeconds` early after a pause, interruption or route change.
+    /// Negative while still in the countdown — the scheduler then places the first tick in the future.
+    private func timelineElapsed() -> Double {
+        sessionElapsed() - Double(countdownSeconds)
     }
 
     private func updatePhase() {
@@ -382,7 +390,7 @@ final class SessionState {
             isPaused = false
             do {
                 try audioEngine?.startEngine()
-                scheduler?.restart(elapsedSeconds: sessionElapsed())
+                scheduler?.restart(elapsedSeconds: timelineElapsed())
                 startDisplayTimer()
             } catch {
                 Logger.audio.error("Audio resume after interruption failed: \(error)")
@@ -407,7 +415,7 @@ final class SessionState {
     /// by AudioEngine but all scheduled buffers were flushed. Reschedule and restart players.
     private func handleConfigurationChange() {
         guard isActive, !isPaused else { return }
-        scheduler?.restart(elapsedSeconds: sessionElapsed())
+        scheduler?.restart(elapsedSeconds: timelineElapsed())
     }
 
     func reset() {

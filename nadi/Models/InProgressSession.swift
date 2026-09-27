@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-/// Temporary record written at session start, updated every 30s.
+/// Temporary record written at session start, updated every 10 s (SessionState heartbeat).
 /// Used to recover from app termination mid-session.
 /// Deleted on normal session completion.
 @Model
@@ -9,7 +9,8 @@ final class InProgressSession {
     var id: UUID
     var startTime: Date
     var plannedDuration: Int
-    /// Updated every 30 seconds while the session is active.
+    /// Updated every 10 seconds while the session is active (only in the foreground — the display
+    /// task is suspended in the background, so a background kill recovers up to the last foreground tick).
     var lastActiveTimestamp: Date
     var weekNumber: Int
     var phaseDuration: Int

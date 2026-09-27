@@ -100,14 +100,14 @@ final class AppSettings {
         onboardingComplete = defaults.bool(forKey: "onboardingComplete")
     }
 
-    /// Advance to the next week if 7 consecutive days have been completed.
+    /// Advance to the next week once six of the last seven days (since the week began) were practised.
     func checkWeekAdvance(completedDates: Set<String>) {
         guard currentWeek < 6 else { return }
-        let days = StreakCalculator.consecutiveDaysSince(
+        let days = StreakCalculator.practiceDaysInLastWeek(
             startDate: weekStartDate,
             completedDates: completedDates
         )
-        if days >= 7 {
+        if days >= 6 {
             advanceWeek()
         }
     }

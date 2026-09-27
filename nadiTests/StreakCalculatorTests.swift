@@ -98,3 +98,29 @@ private let now = Date(timeIntervalSince1970: 1_738_972_800) // 2025-02-08 00:00
     let start = daysAgo(5, from: now)
     #expect(StreakCalculator.consecutiveDaysSince(startDate: start, completedDates: dates, now: now) == 6)
 }
+
+// MARK: - practiceDaysInLastWeek
+
+@Test func practiceDaysInLastWeekEmpty() {
+    #expect(StreakCalculator.practiceDaysInLastWeek(startDate: "2025-01-01", completedDates: [], now: now) == 0)
+}
+
+@Test func practiceDaysInLastWeekInvalidStart() {
+    #expect(StreakCalculator.practiceDaysInLastWeek(startDate: "bad", completedDates: [daysAgo(0, from: now)], now: now) == 0)
+}
+
+@Test func practiceDaysInLastWeekCountsSixOfSevenWithOneGap() {
+    // days 0,1,2,4,5,6 practised; day 3 missed
+    let dates: Set<String> = [0, 1, 2, 4, 5, 6].reduce(into: []) { $0.insert(daysAgo($1, from: now)) }
+    let start = daysAgo(6, from: now)
+    #expect(StreakCalculator.practiceDaysInLastWeek(startDate: start, completedDates: dates, now: now) == 6)
+}
+
+@Test func practiceDaysInLastWeekIgnoresDaysBeforeStartAndOlderThanSeven() {
+    // practised every day for two weeks, but the week only began 3 days ago
+    let dates: Set<String> = (0...13).reduce(into: []) { $0.insert(daysAgo($1, from: now)) }
+    let start = daysAgo(3, from: now)
+    #expect(StreakCalculator.practiceDaysInLastWeek(startDate: start, completedDates: dates, now: now) == 4)
+    // and never more than seven, whatever the history
+    #expect(StreakCalculator.practiceDaysInLastWeek(startDate: "2000-01-01", completedDates: dates, now: now) == 7)
+}

@@ -84,4 +84,24 @@ enum StreakCalculator {
         }
         return count
     }
+
+    /// Practice days in the last seven days (today and the six before it) that fall on or after
+    /// `startDate`. Used for week auto-advance: six of seven matches the course's own baseline
+    /// ("every morning except Sunday"), and the window slides, so one missed day costs a day,
+    /// not the week. (`consecutiveDaysSince` could never recover once a gap sat between the week's
+    /// start date and today — after one missed day the week never advanced again.)
+    static func practiceDaysInLastWeek(startDate: String, completedDates: Set<String>, now: Date = Date()) -> Int {
+        let formatter = DateFormatting.localDateFormatter
+        guard formatter.date(from: startDate) != nil else { return 0 }
+        var count = 0
+        for offset in 0..<7 {
+            guard let day = Calendar.current.date(byAdding: .day, value: -offset, to: now) else { continue }
+            let dayStr = formatter.string(from: day)
+            // "yyyy-MM-dd" strings compare chronologically
+            if dayStr >= startDate, completedDates.contains(dayStr) {
+                count += 1
+            }
+        }
+        return count
+    }
 }
